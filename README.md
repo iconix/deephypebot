@@ -12,7 +12,7 @@ The project will culminate in a **Twitter bot (@deephypebot)** that will monitor
 
 ## Project Architecture
 
-![Project architecture diagram](/media/deephypebot-architecture.svg)
+![Project architecture diagram](deephypebot-architecture.svg)
 
 ### Training data
 
