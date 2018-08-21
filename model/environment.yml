@@ -1,0 +1,14 @@
+name: deephypebot_model
+channels:
+  - conda-forge
+  - pytorch
+dependencies:
+  - python=3.6
+  - flask
+  - pytorch=0.4
+  - dill
+  - unidecode
+  - pip:
+    - setuptools
+    - wheel
+    - "git+https://github.com/iconix/pytorch-text-vae.git"
