@@ -1,0 +1,23 @@
+{
+  "name": "deephypebot_workers",
+  "version": "0.0.1",
+  "description": "Worker agents for monitoring Twitter and Google Sheets",
+  "main": "twitter_worker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iconix/deephypebot.git"
+  },
+  "author": "Nadja Rhodes",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/iconix/deephypebot/issues"
+  },
+  "homepage": "https://github.com/iconix/deephypebot#readme",
+  "dependencies": {
+    "async": "^2.6.1",
+    "request": "^2.88.0"
+  }
+}

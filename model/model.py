@@ -1,17 +1,17 @@
-# serve.py - launch a simple PyTorch model server with Flask
+# model.py - launch a simple PyTorch model server with Flask
 
 from flask import Flask, jsonify, request
 import torch
 
 from pytorchtextvae import generate # https://github.com/iconix/pytorch-text-vae
 
-### Load my pre-trained PyTorch model from another package
+### Load my pre-trained PyTorch model from another package (TODO: slow)
 
 print('Loading model')
 DEVICE = torch.device('cpu') # CPU inference
 # TODO: load model from Quilt
-vae, input_side, output_side, pairs, dataset, EMBED_SIZE, random_state = generate.load_model('reviews_and_metadata_5yrs_state.pt', 'reviews_and_metadata_5yrs_stored_info.pkl', '.', None, DEVICE)
-num_sample, max_length, temp, print_z = 1, 50, 0.75, False
+vae, input_side, output_side, pairs, dataset, Z_SIZE, random_state = generate.load_model('reviews_and_metadata_5yrs_state.pt', 'reviews_and_metadata_5yrs_stored_info.pkl', DEVICE, cache_path='.')
+num_sample = 1
 
 ### Setup Flask app
 
@@ -19,7 +19,7 @@ app = Flask(__name__)
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    gens, zs, conditions = generate.generate(vae, num_sample, max_length, temp, print_z, input_side, output_side, pairs, dataset, EMBED_SIZE, random_state, DEVICE)
+    gens, zs, conditions = generate.generate(vae, input_side, output_side, pairs, dataset, Z_SIZE, random_state, DEVICE, genres=request.json['genres'], num_sample=1)
     return jsonify({'gens': str(gens), 'zs': str(zs), 'conditions': str(dataset.decode_genres(conditions[0]))})
 
 ### App error handling

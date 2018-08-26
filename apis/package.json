@@ -1,0 +1,24 @@
+{
+  "name": "deephypebot_apis",
+  "version": "0.0.1",
+  "description": "APIs for pulling Twitter activity, requesting Spotify attributes, and saving generated tweets to Google Sheets",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iconix/deephypebot.git"
+  },
+  "author": "Nadja Rhodes",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/iconix/deephypebot/issues"
+  },
+  "homepage": "https://github.com/iconix/deephypebot#readme",
+  "dependencies": {
+    "express": "^4.16.3",
+    "google-spreadsheet": "^2.0.5",
+    "spotify-web-api-node": "^3.1.1"
+  }
+}
