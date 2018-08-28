@@ -17,8 +17,8 @@ num_sample = 1
 
 app = Flask(__name__)
 
-@app.route('/predict', methods=['POST'])
-def predict():
+@app.route('/generate', methods=['POST'])
+def gen():
     gens, zs, conditions = generate.generate(vae, input_side, output_side, pairs, dataset, Z_SIZE, random_state, DEVICE, genres=request.json['genres'], num_sample=1)
     return jsonify({'gens': str(gens), 'zs': str(zs), 'conditions': str(dataset.decode_genres(conditions[0]))})
 

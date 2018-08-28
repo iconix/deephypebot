@@ -13,9 +13,10 @@ var expiry_date;
 
 // search tracks whose name, album or artist contains the query
 function get_genres_by_query(query) {
+  console.log(`query: ${query}`);
   return spotify_api.searchTracks(query).then((data) => {
     if (data.body) {
-      var track = data.body['tracks']['items'][0]; // always get the first track result
+      var track = data.body['tracks']['items'][0]; // TODO: always getting the first track result
       var artist_ids = []
       for (var artist of track['artists']) {
         artist_ids.push(artist['id']);
@@ -58,10 +59,10 @@ var get_genres = (req, res) => {
     get_genres_by_query(q).then((search_res) => {
       res.send(search_res);
     }, (err) => {
-      if (err instanceof WebapiError) {
+      if (err.name == 'WebapiError') {
         res.status(err.statusCode).send(err.message);
       } else {
-        res.status(500).send(`error: ${err}`);
+        res.status(500).send(`error: ${err.message}`);
       }
     });
   } else {
@@ -78,10 +79,10 @@ var get_genres = (req, res) => {
       get_genres_by_query(q).then((search_res) => {
         res.send(search_res);
       }, (err) => {
-        if (err instanceof WebapiError) {
+        if (err.name == 'WebapiError') {
           res.status(err.statusCode).send(err.message);
         } else {
-          res.status(500).send(`error: ${err}`);
+          res.status(500).send(`error: ${err.message}`);
         }
       });
     },

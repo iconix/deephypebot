@@ -6,11 +6,15 @@ var genres;
 var q;
 
 var get_tweet = (step) => {
-  // grab tweet
-  tweet_num = 2
+  tweet_num = -1;
+
+  if (tweet_num < 0) { // random tweet mode
+    tweet_num = Math.floor(Math.random() * 5);
+    console.log(`random tweet #${tweet_num}`);
+  }
 
   var get_tweet_opts = {
-    uri: 'http://localhost:8888/get_tweet',
+    uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/get_tweet`,
     json: {
       'tweet_num': tweet_num
     }
@@ -21,23 +25,31 @@ var get_tweet = (step) => {
       tweet = body;
 
       // parse song title + artist
-      const regex = /\"(.*)\" by ([^ http]*)|(.*)'s \"(.*)\"/gm;
+      // TODO: second regex with optional non-capturing group can miss artists
+      const regex = /\"(.*)\" by ([^ http]*)|(?:.*, )?(.*)'s \"(.*)\"/gm;
       res = regex.exec(tweet);
-      if (res[1]) {
-        q = `${res[1]} ${res[2]}`;
-      } else if (res[3]) {
-        q = `${res[3]} ${res[4]}`;
+      if (!res) {
+        step(`tweet not parseable: ${tweet}`)
+        return;
+      } else if (res[1]) { // "title" by artist
+        q = `${res[1]} ${res[2].replace(/ and /g, ' ')}`;
+      } else if (res[3]) { // artist's "title"
+        q = `${res[3].replace(/ and /g, ' ')} ${res[4]}`;
       } // TODO: else?? this could be better
+
       step();
     } else {
-      step(error);
+      if (!error) {
+        error = body;
+      }
+      step(true, error);
     }
   });
 }
 
 var get_genres = (step) => {
   var get_spotify_opts = {
-    uri: 'http://localhost:8888/get_genres',
+    uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/get_genres`,
     json: {
       'q': q
     }
@@ -48,14 +60,17 @@ var get_genres = (step) => {
       genres = body;
       step();
     } else {
-      step(error);
+      if (!error) {
+        error = body;
+      }
+      step(true, error);
     }
   });
 }
 
 var generate = (step) => {
   var get_gen_opts = {
-    uri: 'http://localhost:4444/predict',
+    uri: `${process.env.DEEPHYPEBOT_MODEL_BASEURL}/generate`,
     json: {
       'genres': genres
     }
@@ -64,19 +79,28 @@ var generate = (step) => {
   request.post(get_gen_opts, function (error, response, body) {
     if (!error && response.statusCode == 200) {
       gen = JSON.stringify(JSON.parse(body['gens'].replace(/'/g, '"'))[0]);
+
+      // remove UNKs
+      gen = gen.replace(/ UNK /g, ' ');
+
       step();
     } else {
-      step(error);
+      if (!error) {
+        error = body;
+      }
+      step(true, error);
     }
   });
 }
 
 var save_gen = (step) => {
   var get_save_opts = {
-    uri: 'http://localhost:8888/save_gen',
+    uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/save_gen`,
     json: {
       'tweet_num': tweet_num,
-      'gen': gen
+      'gen': gen,
+      'q': q,
+      'genres': genres
     }
   };
 
@@ -84,7 +108,10 @@ var save_gen = (step) => {
     if (!error && response.statusCode == 200) {
       step();
     } else {
-      step(error);
+      if (!error) {
+        error = body;
+      }
+      step(true, error);
     }
   });
 }
@@ -95,9 +122,9 @@ function loop(){
     get_genres,
     generate,
     save_gen
-  ], (err) => {
+  ], (err, res) => {
     if (err) {
-      console.log(`error ${err}`)
+      console.log(`${res}`);
     } else {
       console.log(`saved ${gen}`);
     }
