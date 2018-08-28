@@ -19,4 +19,4 @@ app.post('/save_gen', sheets.save_gen);
 
 port_num = 8888;
 console.log(`Listening on ${port_num}`);
-app.listen(port_num);
+app.listen(process.env.PORT || port_num);
