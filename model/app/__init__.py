@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 
-from app import model
+from app import gan
 
 app = Flask(__name__)
 
@@ -9,8 +9,8 @@ def generate():
     genres = request.json['genres']
     num_sample = request.json['num_sample'] if 'num_sample' in request.json else 1
 
-    gens, zs, conditions = model.gen(genres, num_sample)
-    return jsonify({'gens': gens, 'zs': str(zs), 'conditions': conditions})
+    gens = gan.generate(genres, num_sample)
+    return jsonify({ 'gens': gens })
 
 ### App error handling
 

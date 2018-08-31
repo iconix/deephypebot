@@ -138,6 +138,7 @@ var generate = (genres, cb) => {
 
       gens.forEach((gen, i) => {
         // remove 1) UNKs, 2) consecutive duplicated words
+        // TODO: replace artist and song_title ?
         gens[i] = gen.replace(/UNK/g, '').split(/\s+/).filter((value, i, arr) => { return value != arr[i+1]}).join(" ");
       });
 
