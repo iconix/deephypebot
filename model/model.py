@@ -7,7 +7,7 @@ from pytorchtextvae import generate # https://github.com/iconix/pytorch-text-vae
 
 ### Load my pre-trained PyTorch model from another package (TODO: slow)
 
-print('Loading model')
+print('Loading model', flush=True)
 DEVICE = torch.device('cpu') # CPU inference
 # TODO: load model from Quilt
 vae, input_side, output_side, pairs, dataset, Z_SIZE, random_state = generate.load_model('reviews_and_metadata_5yrs_state.pt', 'reviews_and_metadata_5yrs_stored_info.pkl', DEVICE, cache_path='.')

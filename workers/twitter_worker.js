@@ -1,22 +1,20 @@
 var request = require('request');
 var async = require('async');
 
+var tweet_id;
 var gen;
 var genres;
 var q;
 
+var get_last_gen = (step) => {
+  step();
+}
+
 var get_tweet = (step) => {
-  tweet_num = -1;
-
-  if (tweet_num < 0) { // random tweet mode
-    tweet_num = Math.floor(Math.random() * 5);
-    console.log(`random tweet #${tweet_num}`);
-  }
-
   var get_tweet_opts = {
-    uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/get_tweet`,
+    uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/get_tweets`,
     json: {
-      'tweet_num': tweet_num
+      'tweet_id': tweet_id
     }
   };
 
@@ -80,7 +78,7 @@ var generate = (step) => {
     if (!error && response.statusCode == 200) {
       gen = JSON.stringify(JSON.parse(body['gens'].replace(/'/g, '"'))[0]);
 
-      // remove UNKs
+      // remove UNKs TODO: also remove consecutive duplicated words?
       gen = gen.replace(/ UNK /g, ' ');
 
       step();
@@ -118,6 +116,7 @@ var save_gen = (step) => {
 
 function loop(){
   async.series([
+    get_last_gen,
     get_tweet,
     get_genres,
     generate,

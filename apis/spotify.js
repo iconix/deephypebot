@@ -92,4 +92,4 @@ var get_genres = (req, res) => {
   }
 }
 
-module.exports = {get_genres: get_genres};
+module.exports = { get_genres: get_genres };
