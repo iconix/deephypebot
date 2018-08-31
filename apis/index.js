@@ -13,6 +13,8 @@ app.post('/get_genres', spotify.get_genres);
 
 // takes in a tweet id, returns new tweets on bot's home timeline since (max 200)
 app.post('/get_tweets', twitter.get_tweets);
+
+app.get('/get_last_row', sheets.get_last_row);
 // TODO: batching - /save_gens
 app.post('/save_gen', sheets.save_gen);
 

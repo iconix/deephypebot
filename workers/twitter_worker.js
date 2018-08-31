@@ -1,41 +1,19 @@
 var request = require('request');
 var async = require('async');
 
-var tweet_id;
-var gen;
-var genres;
-var q;
-
 var get_last_gen = (step) => {
-  step();
-}
-
-var get_tweet = (step) => {
-  var get_tweet_opts = {
-    uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/get_tweets`,
-    json: {
-      'tweet_id': tweet_id
-    }
+  var get_last_gen_opts = {
+    uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/get_last_row`
   };
 
-  request.post(get_tweet_opts, function (error, response, body) {
+  request.get(get_last_gen_opts, function (error, response, body) {
     if (!error && response.statusCode == 200) {
-      tweet = body;
-
-      // parse song title + artist
-      // TODO: second regex with optional non-capturing group can miss artists
-      const regex = /\"(.*)\" by ([^ http]*)|(?:.*, )?(.*)'s \"(.*)\"/gm;
-      res = regex.exec(tweet);
-      if (!res) {
-        step(`tweet not parseable: ${tweet}`)
-        return;
-      } else if (res[1]) { // "title" by artist
-        q = `${res[1]} ${res[2].replace(/ and /g, ' ')}`;
-      } else if (res[3]) { // artist's "title"
-        q = `${res[3].replace(/ and /g, ' ')} ${res[4]}`;
-      } // TODO: else?? this could be better
-
-      step();
+      try {
+        tweet_id = JSON.parse(body).tweetid;
+        step();
+      } catch (err) {
+        step(true, err);
+      }
     } else {
       if (!error) {
         error = body;
@@ -45,7 +23,67 @@ var get_tweet = (step) => {
   });
 }
 
-var get_genres = (step) => {
+var process_tweet = (tweet, cb) => {
+  // parse song title + artist
+
+  // TODO: second regex with optional non-capturing group can miss artists
+  const regex = /["'](.*)["'] by ([^ http]*)|(?:.*, )?(.*)'s ["'](.*)["']/gm;
+  r = regex.exec(tweet.full_text);
+  if (!r) {
+    console.log(`tweet not parseable: ${JSON.stringify(tweet)}`);
+    cb(false, undefined);
+    return;
+  } else if (r[1]) { // "title" by artist
+    q = `${r[1]} ${r[2].replace(/ and /g, ' ')}`;
+  } else if (r[3]) { // artist's "title"
+    q = `${r[3].replace(/ and /g, ' ')} ${r[4]}`;
+  } // TODO: else?? this could be better
+
+  cb(false, q);
+}
+
+var get_tweets = (step) => {
+  var get_tweet_opts = {
+    uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/get_tweets`,
+    json: {
+      'tweet_id': tweet_id
+    }
+  };
+
+  request.post(get_tweet_opts, function (error, response, body) {
+    if (!error && response.statusCode == 200) {
+      agg_results = [];
+      body.forEach(t => agg_results.push({'tweet': t}));
+
+      async.map(body, process_tweet, function(err, results) {
+        if (err) {
+          step(true, err);
+        } else {
+          results.forEach((q, i) => {
+            agg_results[i]['q'] = q;
+          });
+
+          agg_results = agg_results.filter(r => r.q);
+
+          tweets = [];
+          agg_results.forEach(r => tweets.push(r.tweet));
+
+          qs = [];
+          agg_results.forEach(r => qs.push(r.q));
+
+          step();
+        }
+      });
+    } else {
+      if (!error) {
+        error = body;
+      }
+      step(true, error);
+    }
+  });
+}
+
+var get_genres = (q, cb) => {
   var get_spotify_opts = {
     uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/get_genres`,
     json: {
@@ -56,17 +94,34 @@ var get_genres = (step) => {
   request.post(get_spotify_opts, function (error, response, body) {
     if (!error && response.statusCode == 200) {
       genres = body;
-      step();
+      console.log(`genres for '${q}': ${genres}`);
+      cb(false, genres);
     } else {
       if (!error) {
         error = body;
       }
-      step(true, error);
+      cb(true, error);
     }
   });
 }
 
-var generate = (step) => {
+var get_genres_list = (step) => {
+  async.map(qs, get_genres, function(err, results) {
+    if (err) {
+      step(true, err);
+    } else {
+      genres_list = results;
+
+      genres_list.forEach((r, i) => {
+        agg_results[i]['genres'] = r;
+      });
+
+      step();
+    }
+  });
+}
+
+var generate = (genres, cb) => {
   var get_gen_opts = {
     uri: `${process.env.DEEPHYPEBOT_MODEL_BASEURL}/generate`,
     json: {
@@ -81,35 +136,63 @@ var generate = (step) => {
       // remove UNKs TODO: also remove consecutive duplicated words?
       gen = gen.replace(/ UNK /g, ' ');
 
-      step();
+      cb(false, gen);
     } else {
       if (!error) {
         error = body;
       }
-      step(true, error);
+      cb(true, error);
     }
   });
 }
 
-var save_gen = (step) => {
+var generate_multi = (step) => {
+  async.mapSeries(genres_list, generate, function(err, results) {
+    if (err) {
+      step(true, err);
+    } else {
+      gens = results;
+
+      gens.forEach((r, i) => {
+        agg_results[i]['gen'] = r;
+      });
+
+      step();
+    }
+  });
+}
+
+var save_gen = (res, cb) => {
   var get_save_opts = {
     uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/save_gen`,
     json: {
-      'tweet_num': tweet_num,
-      'gen': gen,
-      'q': q,
-      'genres': genres
+      'gen': res.gen ? res.gen.replace(/"/g, '') : res.gen,
+      'q': res.q,
+      'genres': res.genres,
+      'tweet_id': res.tweet.id_str,
+      'tweet': res.tweet.full_text,
+      'source': res.tweet.source
     }
   };
 
   request.post(get_save_opts, function (error, response, body) {
     if (!error && response.statusCode == 200) {
-      step();
+      cb();
     } else {
       if (!error) {
         error = body;
       }
-      step(true, error);
+      cb(true, error);
+    }
+  });
+}
+
+var save_gens = (step) => {
+  async.mapSeries(agg_results, save_gen, function(err, results) {
+    if (err) {
+      step(true, err);
+    } else {
+      step();
     }
   });
 }
@@ -117,19 +200,24 @@ var save_gen = (step) => {
 function loop(){
   async.series([
     get_last_gen,
-    get_tweet,
-    get_genres,
-    generate,
-    save_gen
+    get_tweets,
+    get_genres_list,
+    generate_multi,
+    save_gens
   ], (err, res) => {
     if (err) {
-      console.log(`${res}`);
+      console.log(`error ${res}`);
     } else {
-      console.log(`saved ${gen}`);
+      if (gens.length) {
+        console.log(`saved [${gens}]`);
+      } else {
+        console.log('no new tweets found');
+      }
     }
   });
 }
 
+loop();
 setInterval(function(){
   loop();
 }, 60*1000);

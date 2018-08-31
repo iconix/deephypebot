@@ -23,7 +23,8 @@ var get_tweets = (req, res) => {
 }
 
 function get_bot_timeline(res, since_id = undefined) {
-    bot.get('statuses/home_timeline', {count: 3, tweet_mode: 'extended', since_id: since_id}, function(err, data, response){
+    console.log(`get bot timeline since ${since_id}`);
+    bot.get('statuses/home_timeline', {count: MAX_COUNT, tweet_mode: 'extended', since_id: since_id}, function(err, data){
         if (err) {
             return res.status(500).send(err);
         } else {
@@ -36,7 +37,8 @@ function get_bot_timeline(res, since_id = undefined) {
                 });
             });
 
-            return res.send(tweets);
+            // reverse to get in true chronological order
+            return res.send(tweets.reverse());
         }
     });
 }

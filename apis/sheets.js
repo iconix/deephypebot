@@ -3,20 +3,22 @@ var async = require('async');
 
 // spreadsheet key is the long id in the sheets URL
 var doc = new GoogleSpreadsheet(process.env.DEEPHYPEBOT_SHEETS_ID);
+sheet_title = 'gens';
 var sheet;
 
-var get_tweet = (req, res) => {
-  if (!req || !req.body) {
-    return res.status(400).send('Request body required');
-  }
-
-  var key = 'tweet_num';
-  var tweet_num = req.body[key];
-  if (tweet_num == undefined) {
-    return res.status(400).send(`Request JSON must contain "${key}" as a key`);
-  }
-
-  return get_tweet_from_sheet(res, tweet_num);
+var get_last_row = (req, res) => {
+  async.series([
+    set_auth,
+    get_worksheet,
+    read_last_row
+  ], (err, results) => {
+      if (err) {
+        res.status(500).send(`error: ${err}`);
+      } else {
+        results = results.reduce((acc, val) => acc.concat(val), []).filter(Boolean);
+        res.send(results[0]);
+      }
+  });
 }
 
 var save_gen = (req, res) => {
@@ -24,88 +26,59 @@ var save_gen = (req, res) => {
     return res.status(400).send('Request body required');
   }
 
-  var num_key = 'tweet_num';
-  var tweet_num = req.body[num_key];
-  if (tweet_num == undefined) {
-    return res.status(400).send(`Request JSON must contain "${num_key}" as a key`);
-  }
-
   var gen_key = 'gen';
-  var gen = req.body[gen_key];
+  gen = req.body[gen_key];
   if (gen == undefined) {
     return res.status(400).send(`Request JSON must contain "${gen_key}" as a key`);
   }
 
   var query_key = 'q';
-  var query = req.body[query_key];
+  query = req.body[query_key];
   if (query == undefined) {
     return res.status(400).send(`Request JSON must contain "${query_key}" as a key`);
   }
 
   var genres_key = 'genres';
-  var genres = req.body[genres_key];
+  genres = req.body[genres_key];
   if (genres == undefined) {
     return res.status(400).send(`Request JSON must contain "${genres_key}" as a key`);
   }
 
+  var tweetid_key = 'tweet_id';
+  tweet_id = req.body[tweetid_key];
+  if (tweet_id == undefined) {
+    return res.status(400).send(`Request JSON must contain "${tweetid_key}" as a key`);
+  }
+
+  var tweet_key = 'tweet';
+  tweet = req.body[tweet_key];
+  if (tweet == undefined) {
+    return res.status(400).send(`Request JSON must contain "${tweet_key}" as a key`);
+  }
+
   var source_key = 'source';
-  // TODO: source
+  source = req.body[source_key];
+  if (source == undefined) {
+    return res.status(400).send(`Request JSON must contain "${source_key}" as a key`);
+  }
 
-  return save_gen_to_sheet(res, tweet_num, gen, query, genres);
+  return save_gen_to_sheet(res);
 }
 
-// TODO: cache tweet list (although this code should all go away)
-function get_tweet_from_sheet(res, num_param) {
-  sheet_title = 'gens';
-  col_name = 'tweet';
-
-  tweet_num = num_param;
-
+function save_gen_to_sheet(res) {
   async.series([
     set_auth,
     get_worksheet,
-    read_column
+    write_row
   ], (err, results) => {
       if (err) {
         res.status(500).send(`error: ${err}`);
       } else {
         results = results.reduce((acc, val) => acc.concat(val), []).filter(Boolean);
-
-        if (tweet_num >= results.length) {
-          res.status(400).send(`tweet_num (${tweet_num}) must be less than num of tweets available (${results.length})`);
-        } else {
-          res.send(results[tweet_num]);
-        }
-      }
-  });
-}
-
-function save_gen_to_sheet(res, num_param, gen_param, query_param, genres_param) {
-  sheet_title = 'gens';
-  date_col_name = 'date';
-  gen_col_name = 'commentary';
-  query_col_name = 'spotifyquery';
-  genres_col_name = 'spotifygenres';
-
-  tweet_num = num_param;
-  gen = gen_param;
-  query = query_param;
-  genres = genres_param;
-
-  async.series([
-    set_auth,
-    get_worksheet,
-    write_column
-  ], (err, results) => {
-      if (err) {
-        res.status(500).send(`error: ${err}`);
-      } else {
-        results = results.reduce((acc, val) => acc.concat(val), []).filter(Boolean);
-
         if (!results) {
-          res.status(400).send(`tweet_num (${tweet_num}) must be less than num of tweets available (${results.length})`);
+          res.status(500).send(`no save`);
         } else {
-          res.send(results[tweet_num]);
+          res.send(results);
         }
       }
   });
@@ -140,54 +113,31 @@ var get_worksheet = (step) => {
   });
 }
 
-var read_column = (step) => {
+var read_last_row = (step) => {
   // google provides some query options
   sheet.getRows({
     offset: 1
   }, (err, rows) => {
     if (err) {
-      step(err);
+      step(true, err);
     }
 
     console.log(`read ${rows.length} rows`);
 
-    var vals = [];
-
-    rows.forEach(row => {
-      vals.push(row[col_name]);
-    });
-
-    step(null, vals);
+    step(null, rows[rows.length - 1]);
   });
 }
 
-var write_column = (step) => {
-  // google provides some query options
-  sheet.getRows({
-    offset: 1
-  }, (err, rows) => {
-    if (err) {
-      step(err);
-    }
-
-    console.log(`read ${rows.length} rows`);
-
-    rows[tweet_num][date_col_name] = new Date().toUTCString();
-    rows[tweet_num][gen_col_name] = gen;
-    rows[tweet_num][query_col_name] = query;
-    rows[tweet_num][genres_col_name] = genres;
-
-    rows[tweet_num].save((err) => {
-      if (err) {
-        step(err);
-      }
-      else {
-        var msg = `#${tweet_num} '${rows[tweet_num][query_col_name]}' generated: ${rows[tweet_num][gen_col_name]}`;
-        console.log(`saved! ${msg}`);
-        step(null, msg);
-      }
-    });
-  });
+var write_row = (step) => {
+  sheet.addRow({
+    date: new Date().toUTCString(),
+    spotifyquery: query,
+    spotifygenres: genres,
+    commentary: gen,
+    tweetid: tweet_id,
+    tweet: tweet,
+    source: source
+  }, step);
 }
 
-module.exports = { get_tweet: get_tweet, save_gen: save_gen };
+module.exports = { get_last_row: get_last_row, save_gen: save_gen };
