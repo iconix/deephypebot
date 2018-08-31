@@ -6,8 +6,11 @@ app = Flask(__name__)
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    gens, zs, conditions = model.gen(request.json['genres'])
-    return jsonify({'gens': str(gens), 'zs': str(zs), 'conditions': str(conditions)})
+    genres = request.json['genres']
+    num_sample = request.json['num_sample'] if 'num_sample' in request.json else 1
+
+    gens, zs, conditions = model.gen(genres, num_sample)
+    return jsonify({'gens': gens, 'zs': str(zs), 'conditions': conditions})
 
 ### App error handling
 

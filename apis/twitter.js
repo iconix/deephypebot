@@ -23,7 +23,7 @@ var get_tweets = (req, res) => {
 }
 
 function get_bot_timeline(res, since_id = undefined) {
-    console.log(`get bot timeline since ${since_id}`);
+    console.log(`get bot timeline since ${since_id} (max: ${MAX_COUNT} tweets)`);
     bot.get('statuses/home_timeline', {count: MAX_COUNT, tweet_mode: 'extended', since_id: since_id}, function(err, data){
         if (err) {
             return res.status(500).send(err);

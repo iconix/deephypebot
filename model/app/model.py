@@ -14,7 +14,7 @@ def init():
 
 
 def gen(genres, num_sample=1):
-    gens, zs, conditions = generate.generate(vae, input_side, output_side, pairs, dataset, z_size, random_state, device, genres=genres, num_sample=1)
+    gens, zs, conditions = generate.generate(vae, input_side, output_side, pairs, dataset, z_size, random_state, device, genres=genres, num_sample=num_sample)
 
     conditions = dataset.decode_genres(conditions[0])
 

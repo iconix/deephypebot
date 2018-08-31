@@ -1,6 +1,8 @@
 var request = require('request');
 var async = require('async');
 
+var num_gens = 5;
+
 var get_last_gen = (step) => {
   var get_last_gen_opts = {
     uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/get_last_row`
@@ -125,13 +127,14 @@ var generate = (genres, cb) => {
   var get_gen_opts = {
     uri: `${process.env.DEEPHYPEBOT_MODEL_BASEURL}/generate`,
     json: {
-      'genres': genres
+      'genres': genres,
+      'num_sample': num_gens
     }
   };
 
   request.post(get_gen_opts, function (error, response, body) {
     if (!error && response.statusCode == 200) {
-      gen = JSON.stringify(JSON.parse(body['gens'].replace(/'/g, '"'))[0]);
+      gen = JSON.stringify(body['gens']);
 
       // remove UNKs TODO: also remove consecutive duplicated words?
       gen = gen.replace(/ UNK /g, ' ');
@@ -166,7 +169,7 @@ var save_gen = (res, cb) => {
   var get_save_opts = {
     uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/save_gen`,
     json: {
-      'gen': res.gen ? res.gen.replace(/"/g, '') : res.gen,
+      'gen': res.gen,
       'q': res.q,
       'genres': res.genres,
       'tweet_id': res.tweet.id_str,
