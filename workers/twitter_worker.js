@@ -134,12 +134,14 @@ var generate = (genres, cb) => {
 
   request.post(get_gen_opts, function (error, response, body) {
     if (!error && response.statusCode == 200) {
-      gen = JSON.stringify(body['gens']);
+      gens = body['gens'];
 
-      // remove UNKs TODO: also remove consecutive duplicated words?
-      gen = gen.replace(/ UNK /g, ' ');
+      gens.forEach((gen, i) => {
+        // remove 1) UNKs, 2) consecutive duplicated words
+        gens[i] = gen.replace(/UNK/g, '').split(/\s+/).filter((value, i, arr) => { return value != arr[i+1]}).join(" ");
+      });
 
-      cb(false, gen);
+      cb(false, JSON.stringify(gens));
     } else {
       if (!error) {
         error = body;
