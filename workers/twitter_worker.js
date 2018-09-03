@@ -29,10 +29,11 @@ var process_tweet = (tweet, cb) => {
   // parse song title + artist
 
   // TODO: second regex with optional non-capturing group can miss artists
+  // TODO: use user mention screen names
   const regex = /["'](.*)["'] by ([^ http]*)|(?:.*, )?(.*)'s ["'](.*)["']/gm;
   r = regex.exec(tweet.full_text);
   if (!r) {
-    console.log(`tweet not parseable: ${JSON.stringify(tweet)}`);
+    console.warn(`tweet not parseable: ${JSON.stringify(tweet)}`);
     cb(false, undefined);
     return;
   } else if (r[1]) { // "title" by artist
@@ -102,7 +103,9 @@ var get_genres = (q, cb) => {
       if (!error) {
         error = body;
       }
-      cb(true, error);
+
+      console.warn(`genres NOT received for '${q}': ${error}`);
+      cb(false, undefined);
     }
   });
 }
@@ -112,11 +115,14 @@ var get_genres_list = (step) => {
     if (err) {
       step(true, err);
     } else {
-      genres_list = results;
-
-      genres_list.forEach((r, i) => {
-        agg_results[i]['genres'] = r;
+      results.forEach((g, i) => {
+        agg_results[i]['genres'] = g;
       });
+
+      agg_results = agg_results.filter(r => r.genres);
+
+      genres_list = [];
+      agg_results.forEach(r => genres_list.push(r.genres));
 
       step();
     }
@@ -147,7 +153,9 @@ var generate = (genres, cb) => {
       if (!error) {
         error = body;
       }
-      cb(true, error);
+
+      console.warn(`generations NOT received for '${JSON.stringify(genres)}': ${error}`);
+      cb(false, undefined);
     }
   });
 }
@@ -157,17 +165,21 @@ var generate_multi = (step) => {
     if (err) {
       step(true, err);
     } else {
-      gens = results;
-
-      gens.forEach((r, i) => {
-        agg_results[i]['gen'] = r;
+      results.forEach((g, i) => {
+        agg_results[i]['gen'] = g;
       });
+
+      agg_results = agg_results.filter(r => r.gen);
+
+      gens = [];
+      agg_results.forEach(r => gens.push(r.gen));
 
       step();
     }
   });
 }
 
+// TODO: even if no new tweets found, save last tweet_id read somewhere
 var save_gen = (res, cb) => {
   var get_save_opts = {
     uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/save_gen`,
@@ -188,7 +200,9 @@ var save_gen = (res, cb) => {
       if (!error) {
         error = body;
       }
-      cb(true, error);
+
+      console.warn(`save NOT successful for '${JSON.stringify(get_save_opts)}': ${error}`);
+      cb(false, undefined);
     }
   });
 }
@@ -203,24 +217,32 @@ var save_gens = (step) => {
   });
 }
 
+loop_started = false
 function loop(){
-  async.series([
-    get_last_gen,
-    get_tweets,
-    get_genres_list,
-    generate_multi,
-    save_gens
-  ], (err, res) => {
-    if (err) {
-      console.log(`error ${res}`);
-    } else {
-      if (gens.length) {
-        console.log(`saved [${gens}]`);
+  if (!loop_started) {
+    loop_started = true
+
+    async.series([
+      get_last_gen,
+      get_tweets,
+      get_genres_list,
+      generate_multi,
+      save_gens
+    ], (err, res) => {
+      if (err) {
+        console.error(`error ${res}`);
       } else {
-        console.log('no new tweets found');
+        if (gens.length) {
+          console.log(`saved [${gens}]`);
+        } else {
+          console.warn('no new tweets found');
+        }
       }
-    }
-  });
+      loop_started = false
+    });
+  } else {
+    console.warn('previous loop still running...');
+  }
 }
 
 loop();

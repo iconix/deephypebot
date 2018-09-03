@@ -59,11 +59,7 @@ var get_genres = (req, res) => {
     get_genres_by_query(q).then((search_res) => {
       res.send(search_res);
     }, (err) => {
-      if (err.name == 'WebapiError') {
-        res.status(err.statusCode).send(err.message);
-      } else {
-        res.status(500).send(`error: ${err.message}`);
-      }
+      res.status(500).send(`error: ${err}`);
     });
   } else {
     // retrieve an access token
@@ -79,11 +75,7 @@ var get_genres = (req, res) => {
       get_genres_by_query(q).then((search_res) => {
         res.send(search_res);
       }, (err) => {
-        if (err.name == 'WebapiError') {
-          res.status(err.statusCode).send(err.message);
-        } else {
-          res.status(500).send(`error: ${err.message}`);
-        }
+        res.status(500).send(`error: ${err}`);
       });
     },
     (err) => {
