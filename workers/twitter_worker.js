@@ -56,6 +56,7 @@ var get_tweets = (step) => {
   request.post(get_tweet_opts, function (error, response, body) {
     if (!error && response.statusCode == 200) {
       agg_results = [];
+      // TODO: ignore deephypebot tweets
       body.forEach(t => agg_results.push({'tweet': t}));
 
       async.map(body, process_tweet, function(err, results) {

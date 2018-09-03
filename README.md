@@ -1,14 +1,16 @@
-# @deephypebot
+# [@deephypebot](http://twitter.com/deephypebot)
+_A music commentary generator._
+
 _Nadja Rhodes -- [OpenAI Scholar](https://github.com/iconix/openai) Final Project_
 
 ## Description
-_tl;dr- generating conditioned music commentary on Twitter._
+_tl;dr- auto-generating conditioned music commentary on Twitter._
 
 The [theme of my summer](https://iconix.github.io/dl/2018/06/03/project-ideation#finding-my-niche) as an OpenAI Scholar has been explorations around music + text. I find the language around music - manifested by hundreds of ["nice, small blogs"](https://www.theverge.com/2018/1/2/16840940/spotify-algorithm-music-discovery-mix-cds-resolution) on the internet - to be a deep and unique well of creative writing.
 
-As such, my final project will pay homage to these labors of love on the web and attempt to **generate consistently good and entertaining new writing about songs, based on a set of characteristics about the song and knowledge of past human music writing**.
+As such, my final project will pay homage to these labors of love on the web and attempt to **auto-generate consistently good and entertaining new writing about songs, based on a set of characteristics about the song and knowledge of past human music writing**.
 
-The project will culminate in a **Twitter bot (@deephypebot)** that will monitor other music feeds for songs and automatically generate thoughts/opinions/writing about the songs.
+The project will culminate in a **Twitter bot ([@deephypebot](http://twitter.com/deephypebot))** that will monitor other music feeds for songs and automatically generate thoughts/opinions/writing about the songs.
 
 ## Project Architecture
 
@@ -32,30 +34,28 @@ Then the LC-GAN can be used to fine-tune the input `z` to this LM to generate sa
 
 Once the neural network is trained and deployed, this project will use it to generate new writing conditioned on either [audio features](https://developer.spotify.com/documentation/web-api/reference/tracks/get-audio-features/) or [genre](https://developer.spotify.com/documentation/web-api/reference/artists/get-artist/) information pulled from the Spotify API (depending on which conditioning seems to work better).
 
-This will require detecting the song and artist discussed in tweets that show up on @deephypebot's timeline and then sending this information to Spotify. Then Spotify's response will be sent to the neural network.
+This will require detecting the song and artist discussed in tweets that show up on [@deephypebot](http://twitter.com/deephypebot)'s timeline and then sending this information to Spotify. Then Spotify's response will be sent to the neural network.
 
 ### From samples to tweets
 
 Text generation is [a notoriously messy affair](https://iconix.github.io/dl/2018/06/20/arxiv-song-titles#text-generation-is-a-messy-affair) where "you will not get quality generated text 100% of the time, even with a heavily-trained neural network." While much effort will be put into having as automated and clean a pipeline as possible, some human supervision is prudent.
 
-Once generations for a new proposed tweet are available, an email will be sent to the human curator (me), who will select and lightly edit for grammar and such before releasing to @deephypebot for tweeting.
+Once generations for a new proposed tweet are available, an email will be sent to the human curator (me), who will select and lightly edit for grammar and such before releasing to [@deephypebot](http://twitter.com/deephypebot) for tweeting.
 
 ## Resources
 
 **Reading...**
 - "Starting an Open Source Project" by GitHub [[guide](https://opensource.guide/starting-a-project/)] - #oss
 - "Rules of Machine Learning: Best Practices for ML Engineering" by Google [[guide](https://developers.google.com/machine-learning/guides/rules-of-ml/)] - #eng
-- Sculley, D., Holt, G., Golovin, D., Davydov, E., Phillips, T., Ebner, D., Chaudhary, V., Young, M (2014). Machine Learning: The High-Interest Credit Card of Technical Debt [[paper](https://ai.google/research/pubs/pub43146)] - #eng
-- "Step-by-step Guide to Deploying Deep Learning Models" by Bowei, Hive Machine Learning Engineer [[guide](https://thehive.ai/blog/simple-ml-serving)] - #eng
-- "Tutorial to deploy Machine Learning models in Production as APIs (using Flask)" by Prathamesh Sarang [[guide](https://www.analyticsvidhya.com/blog/2017/09/machine-learning-models-as-apis-using-flask/)] - #eng
+- Sculley, D., Holt, G., Golovin, D., Davydov, E., Phillips, T., Ebner, D., Chaudhary, V., Young, M (2014). _Machine Learning: The High-Interest Credit Card of Technical Debt._ [[paper](https://ai.google/research/pubs/pub43146)] - #eng
 - "Build Your Own Twitter Bots!" [[code](https://github.com/handav/twitter-bots)] [[video](https://egghead.io/courses/create-your-own-twitter-bots)] - #twitterbot
     - A class by fellow Scholar, [Hannah Davis](http://www.hannahishere.com/)!
-- "Make-A-Twitter-Bot Workshop" by Allison Parrish [[guide](https://gist.github.com/aparrish/3ee64d07f0a00b08618a)] - #twitterbot
-- Sohn, K., Yan, X., Lee, H. Learning Structured Output Representation using Deep Conditional Generative Models [CVAE [paper](http://papers.nips.cc/paper/5775-learning-structured-output-representation-using-deep-conditional-generative-models.pdf)] -[](http://papers.nips.cc/paper/5775-learning-structured-output-representation-using-deep-conditional-generative-models.pdf)#vae
-- Bernardo, F., Zbyszynski, M., Fiebrink, R., Grierson, M. (2016). Interactive Machine Learning for End-User Innovation [[paper](http://research.gold.ac.uk/19767/)] - #onlinelearning
-- https://devcenter.heroku.com/articles/getting-started-with-python
-- https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-xviii-deployment-on-heroku
-- https://developer.spotify.com/documentation/web-api/quick-start/
+- "Web API Tutorial" by Spotify [[guide](https://developer.spotify.com/documentation/web-api/quick-start/)]
+- Sohn, K., Yan, X., Lee, H. _Learning Structured Output Representation using Deep Conditional Generative Models._ [CVAE [paper](http://papers.nips.cc/paper/5775-learning-structured-output-representation-using-deep-conditional-generative-models.pdf)] - #vae
+- Engel, J., Hoffman, M., Roberts, A. (2017). _Latent Constraints: Learning to Generate Conditionally from Unconditional Generative Models._ [LC-GAN [paper](https://arxiv.org/abs/1711.05772)] - #gan
+- "Deploying a Python Flask app on Heroku" by John Kagga [[guide](https://medium.com/the-andela-way/deploying-a-python-flask-app-to-heroku-41250bda27d0)] - #eng
+- "The Flask Mega-Tutorial Part XIX: Deployment on Docker Containers" by Miguel Grinberg [[guide](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-xix-deployment-on-docker-containers)] - #eng
+- Bernardo, F., Zbyszynski, M., Fiebrink, R., Grierson, M. (2016). _Interactive Machine Learning for End-User Innovation._ [[paper](http://research.gold.ac.uk/19767/)] - #onlinelearning
 
 **Software…**
 - [PyTorch](https://pytorch.org/) for deep learning
@@ -66,52 +66,61 @@ Once generations for a new proposed tweet are available, an email will be sent t
 - [Twit](https://github.com/ttezel/twit) for Node.js Twitter API access
 - [Spotify Web API Node](https://github.com/thelinmichael/spotify-web-api-node) for Node.js Spotify Web API access
 - [Node Google Spreadsheet](https://github.com/theoephraim/node-google-spreadsheet) for Node.js Google Sheets API access
-- [Heroku](https://www.heroku.com/) free tier for deployments
 
 ## Timeline
 
 **August 3**: _Project dev spec + preliminary tasks; LC-GAN experiments towards better/controllable samples_
 
-- Preliminary project tasks
-    - Developer spec
-    - Data cleaning and versioning; permanent train/test split
-    - Genre collection from Spotify
-    - Metric definitions; benchmarking/baselines
+- [x] Preliminary project tasks
+    - [x] Developer spec
+    - [x] Data cleaning and versioning
+    - [ ] Permanent train/test split
+    - [x] Genre collection from Spotify
+    - [x] Metric definitions; benchmarking/baselines
         - Perplexity
         - Using discriminators to measure accuracy? (real/fake, genre, etc.)
-    - Chat with Natasha and Jesse about more sophisticated modeling for later weeks
-- LC-GAN experiments
-    - Experiment with solo discriminator vs joint: e.g., realism vs realism + readability/grammaticality
-    - Investigate differences in training discriminator on Gaussian random z’s vs. sample-based z’s
-    - Experiment with maximizing a single quality (e.g., sentiment) of a sample
-    - Do balanced class labels matter?
+    - [x] Chat with Natasha and Jesse about more sophisticated modeling for later weeks
+- [x] LC-GAN experiments
+    - [x] Experiment with solo discriminator vs joint: e.g., realism vs realism + readability/grammaticality
+    - [x] Investigate differences in training discriminator on Gaussian random z’s vs. sample-based z’s
+    - [ ] Experiment with maximizing a single quality (e.g., sentiment) of a sample
+    - [ ] Do balanced class labels matter?
 
 **August 10**: _Twitter bot + production pipeline ready_
 
-- What Twitter feeds to watch
-- How to watch Twitter feeds for songs
-- How to build a Twitter bot
-    - Twitter API registration
-- How to request audio features and genres from an app
-    - Spotify API registration
-- Hook up a dummy/heuristic model
-- Post-processing agent
-- Samples -&gt; Email pipeline
-- Email -&gt; Tweet pipeline
-- [Bonus] Likes -&gt; Model pipeline
+- [x] What Twitter feeds to watch
+    - [@chartdata](https://twitter.com/chartdata)
+    - [@hypem](https://twitter.com/hypem)
+    - [@SoundCloud](https://twitter.com/SoundCloud)
+- [x] How to watch Twitter feeds for songs
+    - Via bot's [home timeline](https://developer.twitter.com/en/docs/tweets/timelines/api-reference/get-statuses-home_timeline.html)
+- [x] How to build a Twitter bot
+    - [x] Twitter API registration
+- [x] How to retrieve song title and artist from tweets
+    - Short answer: regex foolishness
+- [x] How to request audio features and genres from an app
+    - [x] Spotify API registration
+- [x] Hook up a dummy/heuristic model
+- [x] Some automatic post-processing
+    - Removes UNK token and consecutive duplicate words
+- [x] Samples -&gt; Google Sheets process
+- [ ] Google Sheets -&gt; Tweets process
+- [ ] [Bonus] Likes -&gt; Model process
 
 **August 17**: _More sophisticated modeling_
 
-- Experiments on conditioning VAE vs. LC-GAN on topic models (LDA), sentiment (deepmoji), audio features/genre...
+- [x] Experiments on conditioning VAE vs. LC-GAN on topic models (LDA)
     - Would be cool to demonstrate Bayesian techniques and understanding through LDA
-- Retrain VAE with focus on reconstruction error (lower KL constraint σ)
-- Time to get best samples possible
+- [ ] Experiments on conditioning VAE vs. LC-GAN on sentiment (deepmoji), audio features/genre...
+- [ ] Retrain VAE with focus on reconstruction error (lower KL constraint σ)
+- [x] Time to get best samples possible
     - Fancier VAEs?
 
 **August 24**: _End-to-end integrations_
 
-- How to deploy a model
-- Select and integrate final production model
+- [ ] How to deploy a model
+    - Especially a 2GB+ one
+- [x] Select and integrate final production model
 
 **August 31**: _Project due_
 
