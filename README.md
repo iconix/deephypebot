@@ -1,20 +1,20 @@
-## Motivation:
+## Motivation
 
 [@deephypebot](https://twitter.com/deephypebot) is a music commentary generator. It is essentially a _language model_, trained on past human music writing from the web and conditioned on attributes of the referenced music. There is an additional training step that attempts to encourage a certain type of descriptive, almost flowery writing commonly found in this genre.
 
 Our goal is to teach this language model to generate consistently good and entertaining new writing about songs.
 
-## Project Achievements:
+## Project Achievements
 
 - Functional, documented pipeline code
 - Inference through trained LC-GAN + VAE architecture
 - A technical white paper (_coming soon_)
 
-## Important Components:
+## Components
 
-A detailed breakdown of the project architecture can be found at [proposal.md](https://github.com/iconix/deephypebot/blob/master/proposal.md).
+A detailed breakdown of the project architecture can be found at [**proposal.md**](https://github.com/iconix/deephypebot/blob/master/proposal.md).
 
-## Future Work:
+## Future Work
 
 Here are things I didn't get to - but would love to if I get the chance!
 
