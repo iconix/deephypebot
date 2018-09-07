@@ -50,9 +50,7 @@ Text generation is [a notoriously messy affair](https://iconix.github.io/dl/2018
 
 Once multiple generations for a new proposed tweet are available, they are added to a spreadsheet where the human curator (me) can select which samples are released to [@deephypebot](http://twitter.com/deephypebot) for tweeting.
 
-**TODO**: samples
-
-Check out <a class="twitter-timeline" href="https://twitter.com/deephypebot?ref_src=twsrc%5Etfw">tweets by @deephypebot</a> for more!
+Check out <a class="twitter-timeline" href="https://twitter.com/deephypebot?ref_src=twsrc%5Etfw">tweets by @deephypebot</a> for the resulting music commentary!
 
 ## Resources
 
