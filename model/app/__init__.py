@@ -1,3 +1,4 @@
+# __init__.py - specify app routes and error handling
 from flask import Flask, jsonify, request
 
 from app import gan

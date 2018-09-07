@@ -11,6 +11,9 @@ var bot = new Twit({
     timeout_ms: TIMEOUT_MS
 });
 
+/*
+* takes in a tweet id, returns new tweets on bot's home timeline since it (max 200)
+*/
 var get_tweets = (req, res) => {
     if (!req || !req.body) {
       return res.status(400).send('Request body required');
@@ -21,6 +24,8 @@ var get_tweets = (req, res) => {
 
     return get_bot_timeline(res, tweet_id);
 }
+
+// helper functions below
 
 function get_bot_timeline(res, since_id = undefined) {
     console.log(`get bot timeline since ${since_id} (max: ${MAX_COUNT} tweets)`);

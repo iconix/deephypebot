@@ -6,10 +6,13 @@ var doc = new GoogleSpreadsheet(process.env.DEEPHYPEBOT_SHEETS_ID);
 sheet_title = 'gens';
 var sheet;
 
-var get_last_row = (req, res) => {
+/* returns the last row of gens sheet
+** note: due to Google Sheet API limitations, any empty row signals the end of a sheet
+*/
+var get_last_gen = (req, res) => {
   async.series([
     set_auth,
-    get_worksheet,
+    get_gens_worksheet,
     read_last_row
   ], (err, results) => {
       if (err) {
@@ -21,6 +24,8 @@ var get_last_row = (req, res) => {
   });
 }
 
+/* takes in expected data for gens sheet and saves it there
+*/
 var save_gen = (req, res) => {
   if (!req || !req.body) {
     return res.status(400).send('Request body required');
@@ -65,10 +70,12 @@ var save_gen = (req, res) => {
   return save_gen_to_sheet(res);
 }
 
+// helper functions below
+
 function save_gen_to_sheet(res) {
   async.series([
     set_auth,
-    get_worksheet,
+    get_gens_worksheet,
     write_row
   ], (err, results) => {
       if (err) {
@@ -93,10 +100,16 @@ var set_auth = (step) => {
   doc.useServiceAccountAuth(creds_json, step);
 }
 
-var get_worksheet = (step) => {
+var get_gens_worksheet = (step) => {
   doc.getInfo((err, info) => {
     if (err) {
-      step(err);
+      step(true, err);
+      return;
+    }
+
+    if (!info) {
+      step(true, `no doc loaded`);
+      return;
     }
 
     console.log(`loaded doc: '${info.title}' by ${info.author.email}`);
@@ -120,6 +133,12 @@ var read_last_row = (step) => {
   }, (err, rows) => {
     if (err) {
       step(true, err);
+      return;
+    }
+
+    if (rows == undefined) {
+      step(true, `no rows found`);
+      return;
     }
 
     console.log(`read ${rows.length} rows`);
@@ -140,4 +159,4 @@ var write_row = (step) => {
   }, step);
 }
 
-module.exports = { get_last_row: get_last_row, save_gen: save_gen };
+module.exports = { get_last_gen: get_last_gen, save_gen: save_gen };

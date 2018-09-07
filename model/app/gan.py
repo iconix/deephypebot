@@ -1,3 +1,5 @@
+# gan.py - initialize pre-trained GAN (that relies on pre-trained VAE);
+# generate samples; + helper functions and classes
 import torch
 import torch.nn as nn
 
@@ -11,6 +13,25 @@ n_hidden = 1024
 temp = 0.2
 
 device = torch.device('cpu') # CPU inference
+
+def init(embed_size):
+    # load GAN generator
+    global ganG, vae_model, output_side, dataset, z_size
+    ganG = LCGAN_G(embed_size).to(device)
+    ganG.load_state_dict(torch.load('ganG_state.pt'))
+
+    vae_model, output_side, dataset, z_size = vae.get_gan_reqs()
+
+def generate(genres, n_sample, max_gen=max_gen, temp=temp):
+    genre_tensor = torch.FloatTensor(dataset.encode_genres(genres))
+
+    res = []
+    for i in range(n_sample):
+        res.append(gan_generate(ganG, genre_tensor, max_gen, temp)[0])
+
+    return res
+
+# helper functions and classes below
 
 class LCGAN_G(nn.Module):
     '''Generator'''
@@ -37,7 +58,7 @@ class LCGAN_G(nn.Module):
         # what it wants to about the original emb(edding) and x
         emb_mid = x[:, self.n_embed:]
         gates = self.sigmoid(x[:, :self.n_embed])
-        demb = gates * emb_mid # TODO: why naming?
+        demb = gates * emb_mid
         emb_prime = (1 - gates)*emb + demb
 
         return emb_prime
@@ -65,20 +86,3 @@ def gan_generate(ganG, condition, max_gen=max_gen, temp=temp, max_sample=False, 
 
         # flip it back
         return generated_str[::-1], z, z_prime
-
-def init(embed_size):
-    # load GAN generator
-    global ganG, vae_model, output_side, dataset, z_size
-    ganG = LCGAN_G(embed_size).to(device)
-    ganG.load_state_dict(torch.load('ganG_state.pt'))
-
-    vae_model, output_side, dataset, z_size = vae.get_gan_reqs()
-
-def generate(genres, n_sample, max_gen=max_gen, temp=temp):
-    genre_tensor = torch.FloatTensor(dataset.encode_genres(genres))
-
-    res = []
-    for i in range(n_sample):
-        res.append(gan_generate(ganG, genre_tensor, max_gen, temp)[0])
-
-    return res

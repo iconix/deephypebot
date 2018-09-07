@@ -1,3 +1,4 @@
+// twitter.js - trigger Twitter-monitoring workflow on a regular schedule
 var request = require('request');
 var async = require('async');
 
@@ -5,7 +6,7 @@ var num_gens = 5;
 
 var get_last_gen = (step) => {
   var get_last_gen_opts = {
-    uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/get_last_row`
+    uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/get_last_gen`
   };
 
   request.get(get_last_gen_opts, function (error, response, body) {
@@ -25,9 +26,10 @@ var get_last_gen = (step) => {
   });
 }
 
+/*
+* parse song title + artist
+*/
 var process_tweet = (tweet, cb) => {
-  // parse song title + artist
-
   // TODO: second regex with optional non-capturing group can miss artists
   // TODO: use user mention screen names
   const regex = /["'](.*)["'] by ([^ http]*)|(?:.*, )?(.*)'s ["'](.*)["']/gm;
@@ -146,6 +148,7 @@ var generate = (genres, cb) => {
       gens.forEach((gen, i) => {
         // remove 1) UNKs, 2) consecutive duplicated words
         // TODO: replace artist and song_title ?
+        // TODO: replace UNKs with artist and song_title at random ?
         gens[i] = gen.replace(/UNK/g, '').split(/\s+/).filter((value, i, arr) => { return value != arr[i+1]}).join(" ");
       });
 
@@ -180,8 +183,8 @@ var generate_multi = (step) => {
   });
 }
 
-// TODO: even if no new tweets found, save last tweet_id read somewhere
 var save_gen = (res, cb) => {
+  // TODO: even if no new tweets found, save last tweet_id read somewhere
   var get_save_opts = {
     uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/save_gen`,
     json: {
@@ -218,6 +221,11 @@ var save_gens = (step) => {
   });
 }
 
+// main processing/workflow loop -
+schedule_seconds = 60
+
+// TODO: temporarily backoff schedule if 'no new tweets found' is frequently occurring
+
 loop_started = false
 function loop(){
   if (!loop_started) {
@@ -249,4 +257,4 @@ function loop(){
 loop();
 setInterval(function(){
   loop();
-}, 60*1000);
+}, schedule_seconds*1000);
