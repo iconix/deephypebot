@@ -8,7 +8,7 @@ Our goal is to teach this language model to generate consistently good and enter
 
 - Model inference through pre-trained LC-GAN + CVAE deep learning architecture (details below)
 - Functional, documented pipeline code
-- A technical white paper (_coming soon_)
+- A technical white paper ([pdf](https://github.com/iconix/deephypebot/blob/master/deephypebot_paper.pdf))
 
 ## Architecture
 
