@@ -2,6 +2,8 @@
 var request = require('request');
 var async = require('async');
 
+var utils = require('./twitter_utils.js');
+
 var num_gens = 5;
 
 var get_last_gen = (step) => {
@@ -32,6 +34,7 @@ var get_last_gen = (step) => {
 var process_tweet = (tweet, cb) => {
   // TODO: second regex with optional non-capturing group can miss artists
   // TODO: use user mention screen names
+  // TODO: remove 'feat.' in addition to the 'and'
   const regex = /["'](.*)["'] by ([^ http]*)|(?:.*, )?(.*)'s ["'](.*)["']/gm;
   r = regex.exec(tweet.full_text);
   if (!r) {
@@ -89,32 +92,8 @@ var get_tweets = (step) => {
   });
 }
 
-var get_genres = (q, cb) => {
-  var get_spotify_opts = {
-    uri: `${process.env.DEEPHYPEBOT_API_BASEURL}/get_genres`,
-    json: {
-      'q': q
-    }
-  };
-
-  request.post(get_spotify_opts, function (error, response, body) {
-    if (!error && response.statusCode == 200) {
-      genres = body;
-      console.log(`genres for '${q}': ${genres}`);
-      cb(false, genres);
-    } else {
-      if (!error) {
-        error = body;
-      }
-
-      console.warn(`genres NOT received for '${q}': ${error}`);
-      cb(false, undefined);
-    }
-  });
-}
-
 var get_genres_list = (step) => {
-  async.map(qs, get_genres, function(err, results) {
+  async.map(qs, utils.get_genres, function(err, results) {
     if (err) {
       step(true, err);
     } else {
@@ -132,40 +111,8 @@ var get_genres_list = (step) => {
   });
 }
 
-var generate = (genres, cb) => {
-  var get_gen_opts = {
-    uri: `${process.env.DEEPHYPEBOT_MODEL_BASEURL}/generate`,
-    json: {
-      'genres': genres,
-      'num_sample': num_gens
-    }
-  };
-
-  request.post(get_gen_opts, function (error, response, body) {
-    if (!error && response.statusCode == 200) {
-      gens = body['gens'];
-
-      gens.forEach((gen, i) => {
-        // remove 1) UNKs, 2) consecutive duplicated words
-        // TODO: replace artist and song_title ?
-        // TODO: replace UNKs with artist and song_title at random ?
-        gens[i] = gen.replace(/UNK/g, '').split(/\s+/).filter((value, i, arr) => { return value != arr[i+1]}).join(" ");
-      });
-
-      cb(false, JSON.stringify(gens));
-    } else {
-      if (!error) {
-        error = body;
-      }
-
-      console.warn(`generations NOT received for '${JSON.stringify(genres)}': ${error}`);
-      cb(false, undefined);
-    }
-  });
-}
-
 var generate_multi = (step) => {
-  async.mapSeries(genres_list, generate, function(err, results) {
+  async.mapSeries(genres_list, utils.generate, function(err, results) {
     if (err) {
       step(true, err);
     } else {
